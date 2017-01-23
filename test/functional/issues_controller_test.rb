@@ -273,6 +273,22 @@ class IssuesControllerTest < ActionController::TestCase
     assert_not_nil assigns(:issue_count_by_group)
   end
 
+  def test_index_with_query_grouped_and_sorted_by_fixed_version
+    get :index, :project_id => 1, :set_filter => 1, :group_by => "fixed_version", :sort => "fixed_version"
+    assert_response :success
+    assert_template 'index'
+    assert_not_nil assigns(:issues)
+    assert_not_nil assigns(:issue_count_by_group)
+  end
+
+  def test_index_with_query_grouped_and_sorted_by_fixed_version_in_reverse_order
+    get :index, :project_id => 1, :set_filter => 1, :group_by => "fixed_version", :sort => "fixed_version:desc"
+    assert_response :success
+    assert_template 'index'
+    assert_not_nil assigns(:issues)
+    assert_not_nil assigns(:issue_count_by_group)
+  end
+
   def test_index_with_query_grouped_by_list_custom_field
     get :index, :project_id => 1, :query_id => 9
     assert_response :success
@@ -472,6 +488,9 @@ class IssuesControllerTest < ActionController::TestCase
 
       assert_select 'input[name=?][value=?]', 'sort', 'status'
     end
+
+    get :index, :project_id => 1, :set_filter => "1", :f => []
+    assert_select '#csv-export-form input[name=?][value=?]', 'f[]', ''
   end
 
   def test_index_csv
@@ -489,6 +508,14 @@ class IssuesControllerTest < ActionController::TestCase
     assert_response :success
     assert_not_nil assigns(:issues)
     assert_equal 'text/csv; header=present', @response.content_type
+  end
+
+  def test_index_csv_without_any_filters
+    @request.session[:user_id] = 1
+    Issue.create!(:project_id => 1, :tracker_id => 1, :status_id => 5, :subject => 'Closed issue', :author_id => 1)
+    get :index, :set_filter => 1, :f => [], :format => 'csv'
+    assert_response :success
+    assert_equal Issue.count, assigns(:issues).count
   end
 
   def test_index_csv_with_description
@@ -4263,7 +4290,11 @@ class IssuesControllerTest < ActionController::TestCase
       assert_equal orig.project_id, copy.project_id
       assert_equal orig.tracker_id, copy.tracker_id
       assert_equal orig.status_id, copy.status_id
-      assert_equal orig.assigned_to_id, copy.assigned_to_id
+      if orig.assigned_to_id
+        assert_equal orig.assigned_to_id, copy.assigned_to_id
+      else
+        assert_nil copy.assigned_to_id
+      end
       assert_equal orig.priority_id, copy.priority_id
     end
   end
@@ -4411,7 +4442,7 @@ class IssuesControllerTest < ActionController::TestCase
     assert_response :success
   end
 
-  def test_destroy_issue_with_no_time_entries
+  def test_destroy_issue_with_no_time_entries_should_delete_the_issues
     assert_nil TimeEntry.find_by_issue_id(2)
     @request.session[:user_id] = 2
 
@@ -4422,7 +4453,7 @@ class IssuesControllerTest < ActionController::TestCase
     assert_nil Issue.find_by_id(2)
   end
 
-  def test_destroy_issues_with_time_entries
+  def test_destroy_issues_with_time_entries_should_show_the_reassign_form
     @request.session[:user_id] = 2
 
     assert_no_difference 'Issue.count' do
@@ -4436,6 +4467,20 @@ class IssuesControllerTest < ActionController::TestCase
     assert_select 'form' do
       assert_select 'input[name=_method][value=delete]'
     end
+  end
+
+  def test_destroy_issues_with_time_entries_should_show_hours_on_issues_and_descendants
+    parent = Issue.generate_with_child!
+    TimeEntry.generate!(:issue => parent)
+    TimeEntry.generate!(:issue => parent.children.first)
+    leaf = Issue.generate!
+    TimeEntry.generate!(:issue => leaf)
+    @request.session[:user_id] = 2
+
+    delete :destroy, :ids => [parent.id, leaf.id]
+    assert_response :success
+
+    assert_select 'p', :text => /3\.00 hours were reported/
   end
 
   def test_destroy_issues_and_destroy_time_entries
@@ -4479,6 +4524,24 @@ class IssuesControllerTest < ActionController::TestCase
     assert_equal 2, TimeEntry.find(2).issue_id
   end
 
+  def test_destroy_issues_with_time_entries_should_reassign_time_entries_of_issues_and_descendants
+    parent = Issue.generate_with_child!
+    TimeEntry.generate!(:issue => parent)
+    TimeEntry.generate!(:issue => parent.children.first)
+    leaf = Issue.generate!
+    TimeEntry.generate!(:issue => leaf)
+    target = Issue.generate!
+    @request.session[:user_id] = 2
+
+    assert_difference 'Issue.count', -3 do
+      assert_no_difference 'TimeEntry.count' do
+        delete :destroy, :ids => [parent.id, leaf.id], :todo => 'reassign', :reassign_to_id => target.id
+        assert_response 302
+      end
+    end
+    assert_equal 3, target.time_entries.count
+  end
+
   def test_destroy_issues_and_reassign_time_entries_to_an_invalid_issue_should_fail
     @request.session[:user_id] = 2
 
@@ -4490,6 +4553,18 @@ class IssuesControllerTest < ActionController::TestCase
     end
     assert_response :success
     assert_template 'destroy'
+  end
+
+  def test_destroy_issues_and_reassign_time_entries_to_an_issue_to_delete_should_fail
+    @request.session[:user_id] = 2
+
+    assert_no_difference 'Issue.count' do
+      assert_no_difference 'TimeEntry.count' do
+        delete :destroy, :ids => [1, 3], :todo => 'reassign', :reassign_to_id => 3
+      end
+    end
+    assert_response :success
+    assert_select '#flash_error', :text => I18n.t(:error_cannot_reassign_time_entries_to_an_issue_about_to_be_deleted)
   end
 
   def test_destroy_issues_from_different_projects

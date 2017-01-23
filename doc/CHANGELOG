@@ -1,8 +1,76 @@
 == Redmine changelog
 
 Redmine - project management software
-Copyright (C) 2006-2016  Jean-Philippe Lang
+Copyright (C) 2006-2017  Jean-Philippe Lang
 http://www.redmine.org/
+
+== 2017-01-07 v3.2.5
+
+* Defect #14658: Wrong activity timezone on user page
+* Defect #22034: Locked users disappear from project settings
+* Defect #24092: bundler error: selenium-webdriver requires Ruby version >= 2.0.
+* Defect #24156: Redmine might create many AnonymousUser and AnonymousGroup entries
+* Defect #24297: Show action not allowed for time entries in closed projects
+* Defect #24348: acts_as_versioned use old style (Rails 2.x) of method call for #all
+* Defect #24646: X-Sendfile is missing in response headers
+* Defect #24693: Spent time on subtasks should also be reassigned when deleting an issue
+* Defect #24718: Prevent from reassigning spent time to an issue that is going to be deleted
+* Defect #24722: Error when trying to reassign spent time when deleting issues from different projects
+* Patch #24283: Validate length of string fields
+* Patch #24296: Add tablename to siblings query to prevent AmbiguousColumn errors
+
+== 2016-10-10 v3.2.4
+
+* Defect #23067: Custom field List Link values to URL breaks on entries with spaces
+* Defect #23655: Restricted permissions for non member/anonymous on a given project not working
+* Defect #23839: "Invalid query" (Error 500) message with MS SQL when displaying an issue from a list grouped and sorted by fixed version
+* Defect #23841: Custom field URL spaces not decoded properly
+* Defect #22123: Totals cannot be removed completely if some columns are set in the global settings
+* Defect #23054: Clearing time entry custom fields while bulk editing results in values set to __none__
+* Defect #23206: Wrong filters are applied when exporting issues to CSV with blank filter
+* Defect #23246: Saving an empty Markdown image tag in Wiki pages causes internal server error
+* Defect #23829: Wrong allow-override example in rdm-mailhandler.rb
+* Patch #23117: Traditional Chinese textile and markdown help translation
+* Patch #23387: Traditional Chinese textile and markdown detailed help translation (to r15723)
+* Patch #23764: closed_on field of copied issue is always set to source issue's value
+* Patch #22988: Czech translation for 3.2-stable
+* Patch #23269: Fix for Error: Unable to autoload constant Redmine::Version when accessing the time report in first request
+* Patch #23278: When creating issues by receiving an email, watchers created via CC in the mail don't get an email notification
+* Patch #23374: Traditional Chinese translation for 3.2-stable
+* Patch #23389: Print Styles get overriden by responsive media query
+* Patch #23708: Too long words in subtasks break layout
+* Patch #23737: Russian translation for 3.2-stable
+* Patch #23883: iOS 10 ignore disabled Zoom
+
+== 2016-06-05 v3.2.3
+
+* Defect #22808: Malformed SQL query with SQLServer when grouping and sorting by fixed version
+* Defect #22912: Selecting a new filter on Activities should not reset the date range
+* Defect #22924: Persistent XSS in Markdown parsing
+* Defect #22925: Persistent XSS in project homepage field
+* Defect #22926: Persistent XSS in Textile parsing
+* Defect #22932: "Group by" row from issues listing has the colspan attribute bigger with one than the number of columns from the table
+* Patch #22427: pt-BR translation for 3.2.stable
+* Patch #22761: Korean translation for 3.2-stable
+* Patch #22898: !>image.png! generates invalid HTML
+* Patch #22911: Error raised when importing issue with Key/Value List custom field
+
+== 2016-05-05 v3.2.2
+
+* Defect #5156: Bulk edit form lacks estimated time field
+* Defect #22105: Responsive layout. Change menu selector in responsive.js.
+* Defect #22134: HTML markup discrepancy ol and ul at app/views/imports/show.html.erb
+* Defect #22196: Improve positioning of issue history and changesets on small screens
+* Defect #22305: Highlighting of required and read-only custom fields broken in Workflow editor
+* Defect #22331: bundler error: Ruby 1.9.3 = "mime-types-data requires Ruby version >= 2.0."
+* Defect #22342: When copying issues to a different project, subtasks /w custom fields not copied over
+* Defect #22354: Sort criteria defined in custom queries are not applied when exporting to CSV
+* Defect #22583: CSV import delimiter detection broken
+* Patch #22278: Revision Graph and Table should work with vertical-align: middle
+* Patch #22296: Add collision option to autocomplete initialization
+* Patch #22319: Fix German "error_invalid_csv_file_or_settings" typo
+* Patch #22336: Revision Table does not scroll horizontally on small screens
+* Patch #22721: Check that the file is actually an image before generating the thumbnail
 
 == 2016-03-13 v3.2.1
 

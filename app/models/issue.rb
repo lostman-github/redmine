@@ -233,7 +233,7 @@ class Issue < ActiveRecord::Base
   # Copies attributes from another issue, arg can be an id or an Issue
   def copy_from(arg, options={})
     issue = arg.is_a?(Issue) ? arg : Issue.visible.find(arg)
-    self.attributes = issue.attributes.dup.except("id", "root_id", "parent_id", "lft", "rgt", "created_on", "updated_on")
+    self.attributes = issue.attributes.dup.except("id", "root_id", "parent_id", "lft", "rgt", "created_on", "updated_on", "closed_on")
     self.custom_field_values = issue.custom_field_values.inject({}) {|h,v| h[v.custom_field_id] = v.value; h}
     self.status = issue.status
     self.author = User.current
@@ -1040,6 +1040,15 @@ class Issue < ActiveRecord::Base
         issue.instance_variable_set "@relations", IssueRelation::Relations.new(issue, relations.sort)
       end
     end
+  end
+
+  # Returns a scope of the given issues and their descendants
+  def self.self_and_descendants(issues)
+    Issue.joins("JOIN #{Issue.table_name} ancestors" +
+        " ON ancestors.root_id = #{Issue.table_name}.root_id" +
+        " AND ancestors.lft <= #{Issue.table_name}.lft AND ancestors.rgt >= #{Issue.table_name}.rgt"
+      ).
+      where(:ancestors => {:id => issues.map(&:id)})
   end
 
   # Finds an issue relation given its id.
